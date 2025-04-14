@@ -1,8 +1,129 @@
-Schouten Keuken & Bad Ontwerper body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; } #sidebar { width: 260px; background: #f4f4f4; border-right: 1px solid #ccc; padding: 20px; box-sizing: border-box; overflow-y: auto; } #sidebar h2 { font-size: 20px; margin-bottom: 10px; } .item { width: 100px; height: 100px; margin: 10px 0; background: #dcdcdc; border: 1px solid #aaa; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: grab; user-select: none; } .item span { font-size: 12px; } #canvas-container { flex: 1; position: relative; overflow: hidden; } #canvas { position: absolute; background: #e0e0e0; width: 2000px; height: 2000px; transform-origin: top left; } .element { position: absolute; background: #90caf9; border: 2px solid #1976d2; cursor: move; text-align: center; padding: 5px; box-sizing: border-box; } #toolbar { position: fixed; bottom: 10px; left: 280px; background: #fff; border: 1px solid #ccc; padding: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.2); z-index: 100; } #toolbar button { margin-right: 10px; } #dimensions { position: fixed; top: 10px; right: 10px; background: white; padding: 10px; border: 1px solid #ccc; } input[type="number"], select { width: 80px; } 
-Schouten Keuken & Bad
-Kast 100x100 
-Oven 80x80 
-Koelkast 90x120 
-Ontwerp opslaan Ontwerp laden Leeg canvas Exporteer afbeelding Zoom: 
-Breedte: Hoogte: Kleur: BlauwOranjeGroenRoze Toepassen 
-const canvas = document.getElementById("canvas"); let selectedElement = null; let zoom = 1; document.querySelectorAll(".item").forEach(item => { item.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", JSON.stringify({ type: e.target.dataset.type, width: e.target.dataset.width, height: e.target.dataset.height, color: e.target.dataset.color })); }); }); canvas.addEventListener("dragover", e => e.preventDefault()); canvas.addEventListener("drop", e => { e.preventDefault(); const data = JSON.parse(e.dataTransfer.getData("text/plain")); const el = document.createElement("div"); el.classList.add("element"); el.textContent = data.type; el.style.left = `${e.offsetX}px`; el.style.top = `${e.offsetY}px`; el.style.width = `${data.width}px`; el.style.height = `${data.height}px`; el.style.backgroundColor = data.color; el.dataset.type = data.type; el.dataset.width = data.width; el.dataset.height = data.height; el.dataset.color = data.color; makeDraggable(el); el.addEventListener("click", () => selectElement(el)); canvas.appendChild(el); }); function makeDraggable(el) { let offsetX, offsetY; el.addEventListener("mousedown", e => { selectedElement = el; offsetX = e.offsetX; offsetY = e.offsetY; const move = ev => { el.style.left = `${(ev.pageX - canvas.getBoundingClientRect().left - offsetX) / zoom}px`; el.style.top = `${(ev.pageY - canvas.getBoundingClientRect().top - offsetY) / zoom}px`; }; document.addEventListener("mousemove", move); document.addEventListener("mouseup", () => { document.removeEventListener("mousemove", move); }, { once: true }); }); } function selectElement(el) { selectedElement = el; document.getElementById("widthControl").value = parseInt(el.style.width); document.getElementById("heightControl").value = parseInt(el.style.height); document.getElementById("colorControl").value = el.dataset.color; } function applyDimensions() { if (selectedElement) { const width = document.getElementById("widthControl").value; const height = document.getElementById("heightControl").value; const color = document.getElementById("colorControl").value; selectedElement.style.width = `${width}px`; selectedElement.style.height = `${height}px`; selectedElement.style.backgroundColor = color; selectedElement.dataset.width = width; selectedElement.dataset.height = height; selectedElement.dataset.color = color; } } function saveDesign() { const layout = Array.from(document.querySelectorAll(".element")).map(el => ({ type: el.dataset.type, left: el.style.left, top: el.style.top, width: el.style.width, height: el.style.height, color: el.dataset.color })); localStorage.setItem("schouten_keukenontwerp", JSON.stringify(layout)); alert("Ontwerp opgeslagen!"); } function loadDesign() { clearCanvas(); const layout = JSON.parse(localStorage.getItem("schouten_keukenontwerp")); if (layout) { layout.forEach(data => { const el = document.createElement("div"); el.classList.add("element"); el.textContent = data.type; el.style.left = data.left; el.style.top = data.top; el.style.width = data.width; el.style.height = data.height; el.style.backgroundColor = data.color; el.dataset.type = data.type; el.dataset.width = parseInt(data.width); el.dataset.height = parseInt(data.height); el.dataset.color = data.color; makeDraggable(el); el.addEventListener("click", () => selectElement(el)); canvas.appendChild(el); }); } } function clearCanvas() { canvas.innerHTML = ""; } function exportDesign() { html2canvas(canvas).then(canvasImage => { const link = document.createElement("a"); link.download = "ontwerp_schouten_keuken.png"; link.href = canvasImage.toDataURL(); link.click(); }); } function setZoom(value) { zoom = parseFloat(value); canvas.style.transform = `scale(${zoom})`; }
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KeukenVisie - Jouw Droomkeuken Op Maat</title>
+  <meta name="description" content="KeukenVisie helpt je bij het ontwerpen, plannen en realiseren van je droomkeuken. Professioneel advies, 3D-ontwerpen en maatwerk." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- Header & Nav -->
+  <header>
+    <div class="container">
+      <h1 class="logo">KeukenVisie</h1>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">Over ons</a></li>
+          <li><a href="#services">Diensten</a></li>
+          <li><a href="#portfolio">Projecten</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="hero-content">
+      <h2>Ontwerp je Droomkeuken</h2>
+      <p>Van idee tot realisatie – samen creëren we jouw perfecte keuken.</p>
+      <a href="#contact" class="btn-primary">Plan een gratis adviesgesprek</a>
+    </div>
+  </section>
+
+  <!-- Over ons -->
+  <section id="about" class="about section">
+    <div class="container">
+      <h2>Over KeukenVisie</h2>
+      <p>Wij zijn een team van gepassioneerde keukenontwerpers met oog voor detail en liefde voor maatwerk. Al meer dan 10 jaar helpen wij klanten hun ideale keuken te realiseren.</p>
+    </div>
+  </section>
+
+  <!-- Diensten -->
+  <section id="services" class="services section">
+    <div class="container">
+      <h2>Onze Diensten</h2>
+      <div class="service-grid">
+        <div class="service-item">
+          <h3>3D Keukenontwerp</h3>
+          <p>Visualiseer jouw keuken nog vóór hij gebouwd wordt.</p>
+        </div>
+        <div class="service-item">
+          <h3>Maatwerk Kasten</h3>
+          <p>Perfecte pasvorm en hoogwaardige materialen.</p>
+        </div>
+        <div class="service-item">
+          <h3>Renovatie & Advies</h3>
+          <p>Volledig keukenrenovatie met professioneel advies.</p>
+        </div>
+        <div class="service-item">
+          <h3>Installatie & Afwerking</h3>
+          <p>Van demontage tot het laatste schroefje – wij regelen alles.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projecten -->
+  <section id="portfolio" class="portfolio section">
+    <div class="container">
+      <h2>Recente Projecten</h2>
+      <div class="portfolio-grid">
+        <div class="portfolio-item">
+          <img src="images/keuken1.jpg" alt="Moderne keuken project" />
+          <h3>Moderne keuken in Amsterdam</h3>
+        </div>
+        <div class="portfolio-item">
+          <img src="images/keuken2.jpg" alt="Landelijke keuken project" />
+          <h3>Landelijke stijl in Apeldoorn</h3>
+        </div>
+        <div class="portfolio-item">
+          <img src="images/keuken3.jpg" alt="Industrieel ontwerp" />
+          <h3>Industrieel design in Rotterdam</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="testimonials section">
+    <div class="container">
+      <h2>Wat Klanten Zeggen</h2>
+      <div class="testimonial">
+        <p>"KeukenVisie heeft mijn droomkeuken waargemaakt. Super service en duidelijke communicatie!"</p>
+        <span>- Marieke, Utrecht</span>
+      </div>
+      <div class="testimonial">
+        <p>"Het 3D-ontwerp gaf mij meteen vertrouwen. Het eindresultaat was nog beter!"</p>
+        <span>- Johan, Den Bosch</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contactformulier -->
+  <section id="contact" class="contact section">
+    <div class="container">
+      <h2>Neem Contact Op</h2>
+      <form id="contact-form">
+        <input type="text" name="name" placeholder="Naam" required />
+        <input type="email" name="email" placeholder="E-mailadres" required />
+        <textarea name="message" placeholder="Je bericht" required></textarea>
+        <button type="submit" class="btn-primary">Verstuur</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 KeukenVisie. Alle rechten voorbehouden.</p>
+    </div>
+  </footer>
+</body>
+</html>
